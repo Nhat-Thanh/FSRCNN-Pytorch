@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class FSRCNN_model(nn.Module):
@@ -12,12 +11,10 @@ class FSRCNN_model(nn.Module):
 
         d = 56
         s = 12
-        self.m = 4
 
-        self.feature_extraction = nn.Conv2d(
-            in_channels=3, out_channels=d, kernel_size=5, padding=2)
-        nn.init.kaiming_normal_(self.feature_extraction.weight)
-        nn.init.zeros_(self.feature_extraction.bias)
+        self.feature_extract = nn.Conv2d(in_channels=3, out_channels=d, kernel_size=5, padding=2)
+        nn.init.kaiming_normal_(self.feature_extract.weight)
+        nn.init.zeros_(self.feature_extract.bias)
 
         self.activation_1 = nn.PReLU(num_parameters=d)
 
@@ -26,14 +23,23 @@ class FSRCNN_model(nn.Module):
         nn.init.zeros_(self.shrink.bias)
 
         self.activation_2 = nn.PReLU(num_parameters=s)
+        
+        # m = 4
+        self.map_1 = nn.Conv2d(in_channels=s, out_channels=s, kernel_size=3, padding=1)
+        nn.init.kaiming_normal_(self.map_1.weight)
+        nn.init.zeros_(self.map_1.bias)
 
-        self.map = []
-        for _ in range(0, self.m):
-            conv = nn.Conv2d(in_channels=s, out_channels=s,
-                             kernel_size=3, padding=1)
-            nn.init.kaiming_normal_(conv.weight)
-            nn.init.zeros_(conv.bias)
-            self.map.append(conv)
+        self.map_2 = nn.Conv2d(in_channels=s, out_channels=s, kernel_size=3, padding=1)
+        nn.init.kaiming_normal_(self.map_2.weight)
+        nn.init.zeros_(self.map_2.bias)
+
+        self.map_3 = nn.Conv2d(in_channels=s, out_channels=s, kernel_size=3, padding=1)
+        nn.init.kaiming_normal_(self.map_3.weight)
+        nn.init.zeros_(self.map_3.bias)
+
+        self.map_4 = nn.Conv2d(in_channels=s, out_channels=s, kernel_size=3, padding=1)
+        nn.init.kaiming_normal_(self.map_4.weight)
+        nn.init.zeros_(self.map_4.bias)
 
         self.activation_3 = nn.PReLU(num_parameters=s)
 
@@ -49,14 +55,16 @@ class FSRCNN_model(nn.Module):
         nn.init.zeros_(self.deconv.bias)
 
     def forward(self, X_in):
-        X = self.feature_extraction(X_in)
+        X = self.feature_extract(X_in)
         X = self.activation_1(X)
 
         X = self.shrink(X)
         X = self.activation_2(X)
 
-        for i in range(0, self.m):
-            X = self.map[i](X)
+        X = self.map_1(X)
+        X = self.map_2(X)
+        X = self.map_3(X)
+        X = self.map_4(X)
         X = self.activation_3(X)
 
         X = self.expand(X)

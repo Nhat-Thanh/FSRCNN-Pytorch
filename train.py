@@ -52,15 +52,15 @@ test_set.load_data()
 # -----------------------------------------------------------
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-srcnn = FSRCNN(scale, device)
-srcnn.setup(optimizer=torch.optim.Adam(srcnn.model.parameters(), lr=2e-5),
+fsrcnn = FSRCNN(scale, device)
+fsrcnn.setup(optimizer=torch.optim.Adam(fsrcnn.model.parameters(), lr=1e-3),
             loss=torch.nn.MSELoss(),
             model_path=model_path,
             ckpt_path=ckpt_path,
             metric=PSNR)
 
-srcnn.load_checkpoint(ckpt_path)
-srcnn.train(train_set, valid_set, 
+fsrcnn.load_checkpoint(ckpt_path)
+fsrcnn.train(train_set, valid_set, 
             steps=steps, batch_size=batch_size,
             save_best_only=save_best_only, 
             save_every=save_every)
@@ -70,6 +70,6 @@ srcnn.train(train_set, valid_set,
 #  Test
 # -----------------------------------------------------------
 # todo: use the best checkpoint to evaluate the test set
-srcnn.load_weights(model_path)
-loss, metric = srcnn.evaluate(test_set)
+fsrcnn.load_weights(model_path)
+loss, metric = fsrcnn.evaluate(test_set)
 print(f"loss: {loss} - psnr: {metric}")
