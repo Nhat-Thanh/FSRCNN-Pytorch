@@ -2,6 +2,8 @@
 
 Implementation of FSRCNN model in **Accelerating the Super-Resolution Convolutional Neural Network** paper with Pytorch.
 
+Tensorflow version: https://github.com/Nhat-Thanh/FSRCNN-TF
+
 I used Adam with optimize tuned hyperparameters instead of SGD + Momentum. 
 
 I implemented 3 models, FSRCNN-x2, FSRCNN-x3, FSRCNN-x4.
