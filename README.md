@@ -65,7 +65,7 @@ I evaluated models with Set5, Set14, BSD100 and Urban100 dataset by PSNR. I use 
 </div>
 
 ## References
-- Accelerating the Super-Resolution Convolutional Neural Network: https://arxiv.org/pdf/1608.00367.pdf
+- Accelerating the Super-Resolution Convolutional Neural Network: https://arxiv.org/abs/1608.00367
 - T91, General100: http://vllab.ucmerced.edu/wlai24/LapSRN/results/SR_training_datasets.zip
 - Set5: https://filebox.ece.vt.edu/~jbhuang/project/selfexsr/Set5_SR.zip
 - Set14: https://filebox.ece.vt.edu/~jbhuang/project/selfexsr/Set14_SR.zip
