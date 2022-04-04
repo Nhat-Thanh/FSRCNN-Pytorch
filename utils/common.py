@@ -98,7 +98,7 @@ def denorm01(src):
 def exists(path):
     return os.path.exists(path)
 
-def PSNR(y_true, y_pred, max_val=1):
+def PSNR(y_true, y_pred, max_val=1.0):
     y_true = y_true.type(torch.float32)
     y_pred = y_pred.type(torch.float32)
     MSE = torch.mean(torch.square(y_true - y_pred))
