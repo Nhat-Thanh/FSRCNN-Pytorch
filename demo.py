@@ -45,7 +45,7 @@ def main():
     model = FSRCNN(scale, device)
     model.load_weights(ckpt_path)
     with torch.no_grad():
-        lr_image.to(device)
+        lr_image = lr_image.to(device)
         sr_image = model.predict(lr_image)[0]
 
     sr_image = denorm01(sr_image)
