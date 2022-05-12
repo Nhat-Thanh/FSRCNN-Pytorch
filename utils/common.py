@@ -130,3 +130,9 @@ def shuffle(X, Y):
     X = torch.index_select(X, dim=0, index=torch.as_tensor(indices))
     Y = torch.index_select(Y, dim=0, index=torch.as_tensor(indices))
     return X, Y
+
+def tensor2numpy(tensor):
+    return tensor.detach().cpu().numpy()
+
+def to_cpu(tensor):
+    return tensor.detach().cpu()

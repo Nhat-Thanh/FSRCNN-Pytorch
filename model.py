@@ -1,11 +1,13 @@
-from neuralnet import FSRCNN_model
-from utils.common import exists
+import os
+from neuralnet import FSRCNN_model 
+from utils.common import exists, tensor2numpy
 import torch
 import numpy as np
 
-# -----------------------------------------------------------
-#  SRCNN
-# -----------------------------------------------------------
+class logger:
+    def __init__(self, path, values) -> None:
+        self.path = path
+        self.values = values
 
 class FSRCNN:
     def __init__(self, scale, device):
@@ -48,17 +50,29 @@ class FSRCNN:
             lr, hr, isEnd = dataset.get_batch(batch_size, shuffle_each_epoch=False)
             lr, hr = lr.to(self.device), hr.to(self.device)
             sr = self.predict(lr)
-            loss = self.loss(hr, sr).cpu()
-            metric = self.metric(hr, sr).cpu()
-            losses.append(loss.detach().numpy())
-            metrics.append(metric.detach().numpy())
+            loss = self.loss(hr, sr)
+            metric = self.metric(hr, sr)
+            losses.append(tensor2numpy(loss))
+            metrics.append(tensor2numpy(metric))
 
         metric = np.mean(metrics)
         loss = np.mean(losses)
         return loss, metric
 
-    def train(self, train_set, valid_set, batch_size, 
-              steps, save_every=1, save_best_only=False):
+    def train(self, train_set, valid_set, batch_size, steps, save_every=1,
+              save_best_only=False, save_log=False, log_dir=None):
+
+        if (save_log) and (log_dir is None):
+            ValueError("log_dir must be specified if save_log is True")
+        os.makedirs(log_dir, exist_ok=True)
+        dict_logger = {"loss":       logger(path=os.path.join(log_dir, "losses.npy"),      values=[]),
+                       "metric":     logger(path=os.path.join(log_dir, "metrics.npy"),     values=[]),
+                       "val_loss":   logger(path=os.path.join(log_dir, "val_losses.npy"),  values=[]),
+                       "val_metric": logger(path=os.path.join(log_dir, "val_metrics.npy"), values=[])}
+        for key in dict_logger.keys():
+            path = dict_logger[key].path
+            if exists(path):
+                dict_logger[key].values = np.load(path).tolist()
 
         cur_step = 0
         if self.ckpt_man is not None:
@@ -71,24 +85,32 @@ class FSRCNN:
             prev_loss, _ = self.evaluate(valid_set)
             self.load_checkpoint(self.ckpt_path)
 
-        loss_mean = []
-        metric_mean = []
+        loss_buffer = []
+        metric_buffer = []
         while cur_step < max_steps:
             cur_step += 1
             lr, hr, _ = train_set.get_batch(batch_size)
             loss, metric = self.train_step(lr, hr)
-            loss_mean.append(loss.detach().numpy())
-            metric_mean.append(metric.detach().numpy())
+            loss_buffer.append(tensor2numpy(loss))
+            metric_buffer.append(tensor2numpy(metric))
 
             if (cur_step % save_every == 0) or (cur_step >= max_steps):
+                loss = np.mean(loss_buffer)
+                metric = np.mean(metric_buffer)
                 val_loss, val_metric = self.evaluate(valid_set)
                 print(f"Step {cur_step}/{max_steps}",
-                      f"- loss: {np.mean(loss_mean):.7f}",
-                      f"- {self.metric.__name__}: {np.mean(metric_mean):.3f}",
+                      f"- loss: {loss:.7f}",
+                      f"- {self.metric.__name__}: {metric:.3f}",
                       f"- val_loss: {val_loss:.7f}",
                       f"- val_{self.metric.__name__}: {val_metric:.3f}")
-                loss_mean = []
-                metric_mean = []
+                if save_log == True:
+                    dict_logger["loss"].values.append(loss)
+                    dict_logger["metric"].values.append(metric)
+                    dict_logger["val_loss"].values.append(val_loss)
+                    dict_logger["val_metric"].values.append(val_metric)
+                
+                loss_buffer = []
+                metric_buffer = []
                 torch.save({'step': cur_step,
                             'model': self.model.state_dict(),
                             'optimizer': self.optimizer.state_dict()
@@ -99,6 +121,13 @@ class FSRCNN:
                 prev_loss = val_loss
                 torch.save(self.model.state_dict(), self.model_path)
                 print(f"Save model to {self.model_path}\n")
+        
+        if save_log == True:
+            for key in dict_logger.keys():
+                logger_obj = dict_logger[key]
+                path = logger_obj.path
+                values = np.array(logger_obj.values, dtype=np.float32)
+                np.save(path, values)
   
     def train_step(self, lr, hr):
         self.model.train(True)
@@ -108,11 +137,8 @@ class FSRCNN:
         sr = self.model(lr)
 
         loss = self.loss(hr, sr)
+        metric = self.metric(hr, sr)
         loss.backward()
-
         self.optimizer.step()
 
-        metric = self.metric(hr, sr)
-        loss = loss.cpu()
-        metric = metric.cpu()
         return loss, metric
