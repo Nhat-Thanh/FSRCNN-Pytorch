@@ -14,6 +14,10 @@ parser.add_argument("--save-best-only", type=int, default=0,                    
 parser.add_argument("--ckpt-dir",       type=str, default="checkpoint/x2", help='-')
 
 
+# -----------------------------------------------------------
+# global variables
+# -----------------------------------------------------------
+
 FLAG, unparsed = parser.parse_known_args()
 steps = FLAG.steps
 batch_size = FLAG.batch_size
@@ -23,6 +27,7 @@ save_every = FLAG.save_every
 model_path = os.path.join(ckpt_dir, f"FSRCNN-x{scale}.pt")
 ckpt_path = os.path.join(ckpt_dir, f"ckpt.pt")
 save_best_only = (FLAG.save_best_only == 1)
+save_log = (FLAG.save_log == 1)
 
 
 # -----------------------------------------------------------
@@ -33,7 +38,6 @@ dataset_dir = "dataset"
 lr_crop_size = 10
 hr_crop_size = lr_crop_size * scale
 
-
 train_set = dataset(dataset_dir, "train")
 train_set.generate(lr_crop_size, hr_crop_size)
 train_set.load_data()
@@ -42,34 +46,22 @@ valid_set = dataset(dataset_dir, "validation")
 valid_set.generate(lr_crop_size, hr_crop_size)
 valid_set.load_data()
 
-test_set = dataset(dataset_dir, "test")
-test_set.generate(lr_crop_size, hr_crop_size)
-test_set.load_data()
-
 
 # -----------------------------------------------------------
 #  Train
 # -----------------------------------------------------------
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-fsrcnn = FSRCNN(scale, device)
-fsrcnn.setup(optimizer=torch.optim.Adam(fsrcnn.model.parameters(), lr=1e-3),
-            loss=torch.nn.MSELoss(),
-            model_path=model_path,
-            ckpt_path=ckpt_path,
-            metric=PSNR)
+def main():
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    fsrcnn = FSRCNN(scale, device)
+    fsrcnn.setup(optimizer=torch.optim.Adam(fsrcnn.model.parameters(), lr=2e-4),
+                loss=torch.nn.MSELoss(), model_path=model_path,
+                ckpt_path=ckpt_path, metric=PSNR)
 
-fsrcnn.load_checkpoint(ckpt_path)
-fsrcnn.train(train_set, valid_set, 
-            steps=steps, batch_size=batch_size,
-            save_best_only=save_best_only, 
-            save_every=save_every)
+    fsrcnn.load_checkpoint(ckpt_path)
+    fsrcnn.train(train_set, valid_set, steps=steps, batch_size=batch_size,
+                save_best_only=save_best_only, save_every=save_every,
+                save_log=save_log, log_dir=ckpt_dir)
 
-
-# -----------------------------------------------------------
-#  Test
-# -----------------------------------------------------------
-# todo: use the best checkpoint to evaluate the test set
-fsrcnn.load_weights(model_path)
-loss, metric = fsrcnn.evaluate(test_set)
-print(f"loss: {loss} - psnr: {metric}")
+if __name__ == "__main__":
+    main()
