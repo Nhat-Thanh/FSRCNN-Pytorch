@@ -48,7 +48,7 @@ def main():
             lr_image = norm01(lr_image)
             hr_image = norm01(hr_image)
 
-            lr_image = torch.unsqueeze(lr_image, dim=0)
+            lr_image = torch.unsqueeze(lr_image, dim=0).to(device)
             sr_image = model.predict(lr_image)[0].cpu()
 
             sum_psnr += PSNR(hr_image, sr_image, max_val=1)
