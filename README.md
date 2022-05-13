@@ -9,26 +9,32 @@ I used Adam with optimize tuned hyperparameters instead of SGD + Momentum.
 I implemented 3 models, FSRCNN-x2, FSRCNN-x3, FSRCNN-x4.
 
 
+
 ## Contents
 - [Train](#train)
+- [Test](#test)
 - [Demo](#demo)
+- [Evaluate](#evaluate)
 - [References](#references)
 
 
 ## Train
 You run this command to begin the training:
 ```
-python train.py  --steps=300000             \
+python train.py  --steps=200000             \
                  --scale=2                  \
                  --batch_size=128           \
                  --save-best-only=0         \
                  --save-every=1000          \
+                 --save-log=0               \
                  --ckpt-dir="checkpoint/x2" 
 ```
-- **save-best-only**: if it is **0**, model weights will be saved every **save-every** steps.
+- **--save-best-only**: if it's equal to **0**, model weights will be saved every **save-every** steps.
+- **--save-log**: if it's equal to **1**, **train loss, train metric, validation loss, validation metric** will be saved every **save-every** steps.
 
 
 **NOTE**: if you want to re-train a new model, you should delete all files in sub-directories in **checkpoint** directory. Your checkpoint will be saved when above command finishs and can be used for the next times, so you can train a model on Google Colab without taking care of GPU time limit.
+
 
 I trained 3 models on Google Colab in 300000 steps:
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Nhat-Thanh/FSRCNN-Pytorch/blob/main/FSRCNN-Pytorch.ipynb)
@@ -40,13 +46,23 @@ You can get the models here:
 
 
 
+## Test
+I use **Set5** as the test set. After Training, you can test models with scale factors **x2, x3, x4**, the result is calculated by compute average PSNR of all images.
+```
+python test.py --scale=2 --ckpt-path="default"
+```
+- **--ckpt-path="default"** means you are using default model path, aka **checkpoint/x{scale}/FSRCNN-x{scale}.h5**. If you want to use your trained model, you can pass yours to **--ckpt-path**.
+
 ## Demo 
 After Training, you can test models with this command, the result is the **sr.png**.
 ```
-python demo.py --image-path="dataset/test2.png"          \
-               --ckpt-path="checkpoint/x4/FSRCNN-x4.h5"  \
-               --scale=4
+python demo.py --image-path="dataset/test2.png" \
+               --ckpt-path="default"            \
+               --scale=2
 ```
+- **--ckpt-path** is the same as in [Test](#test)
+
+## Evaluate
 
 I evaluated models with Set5, Set14, BSD100 and Urban100 dataset by PSNR. I use Set5's Butterfly to show my result:
 
