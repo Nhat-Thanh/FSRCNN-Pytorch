@@ -15,7 +15,7 @@ scale = FLAGS.scale
 ckpt_path = FLAGS.ckpt_path
 
 if scale not in [2, 3, 4]:
-    ValueError("scale must be 2, 3, or 4")
+    raise ValueError("scale must be 2, 3, or 4")
 
 if (ckpt_path == "") or (ckpt_path == "default"):
     ckpt_path = f"checkpoint/x{scale}/FSRCNN-x{scale}.pt"

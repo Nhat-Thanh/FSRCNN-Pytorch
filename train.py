@@ -22,13 +22,20 @@ parser.add_argument("--ckpt-dir",       type=str, default="checkpoint/x2", help=
 FLAG, unparsed = parser.parse_known_args()
 steps = FLAG.steps
 batch_size = FLAG.batch_size
-scale = FLAG.scale
-ckpt_dir = FLAG.ckpt_dir
 save_every = FLAG.save_every
+save_log = (FLAG.save_log == 1)
+save_best_only = (FLAG.save_best_only == 1)
+
+scale = FLAG.scale
+if scale not in [2, 3, 4]:
+    raise ValueError("scale must be 2, 3 or 4")
+
+ckpt_dir = FLAG.ckpt_dir
+if (ckpt_dir == "") or (ckpt_dir == "default"):
+    ckpt_dir = f"checkpoint/x{scale}"
 model_path = os.path.join(ckpt_dir, f"FSRCNN-x{scale}.pt")
 ckpt_path = os.path.join(ckpt_dir, f"ckpt.pt")
-save_best_only = (FLAG.save_best_only == 1)
-save_log = (FLAG.save_log == 1)
+
 
 
 # -----------------------------------------------------------
@@ -55,7 +62,7 @@ valid_set.load_data()
 def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     fsrcnn = FSRCNN(scale, device)
-    fsrcnn.setup(optimizer=torch.optim.Adam(fsrcnn.model.parameters(), lr=2e-4),
+    fsrcnn.setup(optimizer=torch.optim.Adam(fsrcnn.model.parameters(), lr=1e-3),
                 loss=torch.nn.MSELoss(), model_path=model_path,
                 ckpt_path=ckpt_path, metric=PSNR)
 

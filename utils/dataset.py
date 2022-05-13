@@ -55,7 +55,7 @@ class dataset:
 
     def load_data(self):
         if not exists(self.data_file):
-            ValueError(f"\n{self.data_file} and {self.labels_file} DO NOT EXIST\n")
+            raise ValueError(f"\n{self.data_file} and {self.labels_file} DO NOT EXIST\n")
         self.data = np.load(self.data_file)
         self.data = torch.as_tensor(self.data)
         self.labels = np.load(self.labels_file)

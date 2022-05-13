@@ -7,7 +7,7 @@ class FSRCNN_model(nn.Module):
         super(FSRCNN_model, self).__init__()
 
         if scale not in [2, 3, 4]:
-            ValueError("must be 2, 3 or 4")
+            raise ValueError("must be 2, 3 or 4")
 
         d = 56
         s = 12
