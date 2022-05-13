@@ -21,7 +21,7 @@ I implemented 3 models, FSRCNN-x2, FSRCNN-x3, FSRCNN-x4.
 ## Train
 You run this command to begin the training:
 ```
-python train.py  --steps=200000             \
+python train.py  --steps=300000             \
                  --scale=2                  \
                  --batch_size=128           \
                  --save-best-only=0         \
@@ -56,7 +56,7 @@ python test.py --scale=2 --ckpt-path="default"
 ## Demo 
 After Training, you can test models with this command, the result is the **sr.png**.
 ```
-python demo.py --image-path="dataset/test2.png" \
+python demo.py --image-path="dataset/test1.png" \
                --ckpt-path="default"            \
                --scale=2
 ```
